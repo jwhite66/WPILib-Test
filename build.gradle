@@ -1,0 +1,26 @@
+buildscript {
+    repositories {
+        mavenLocal()
+    }
+    dependencies {
+        classpath 'edu.wpi.first:native-utils:0.1-SNAPSHOT'
+    }
+}
+
+plugins {
+    id 'edu.wpi.first.wpilib.versioning.WPILibVersioningPlugin' version '1.6'
+}
+
+// Ensure that the WPILibVersioningPlugin is setup by setting the release type, if releaseType wasn't
+// already specified on the command line
+if (!hasProperty('releaseType')) {
+    WPILibVersion {
+        releaseType = 'dev'
+    }
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}

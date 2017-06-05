@@ -1,0 +1,49 @@
+apply plugin: 'maven-publish'
+apply plugin: 'edu.wpi.first.wpilib.versioning.WPILibVersioningPlugin'
+
+def getVersion = {
+    if (WPILibVersion.version.contains('-'))
+        return WPILibVersion.version.substring(WPILibVersion.version.indexOf('-'))
+    else
+        return ""
+}
+
+if (!hasProperty('releaseType')) {
+    WPILibVersion {
+        releaseType = 'dev'
+    }
+}
+
+def pubVersion
+if (project.hasProperty("publishVersion")) {
+    pubVersion = project.publishVersion
+} else {
+    pubVersion = WPILibVersion.version
+}
+
+if (pubVersion == null || pubVersion == "") {
+  pubVersion = "0.2.0-SNAPSHOT"
+}
+
+def baseArtifactId = 'hal'
+def artifactGroupId = 'edu.wpi.first.hal'
+
+model {
+  publishingConfigs {
+        cpp(PublishingConfig) {
+            extraPublishingTasks = [ cppHeadersZip, cppSourcesZip ]
+            isNative = true
+            artifactId = 'hal'
+            groupId = artifactGroupId
+            version = pubVersion
+            includeComponents = [ 'halAthena' ]
+        }
+        cppSim(PublishingConfig) {
+            isNative = true
+            artifactId = 'hal'
+            groupId = artifactGroupId
+            version = pubVersion
+            includeComponents = [ 'halSim' ]
+        }
+    }
+}

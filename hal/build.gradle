@@ -1,0 +1,74 @@
+apply plugin: 'cpp'
+apply plugin: 'visual-studio'
+apply plugin: 'edu.wpi.first.native-utils'
+apply plugin: 'edu.wpi.first.dependency-utils'
+apply plugin: 'edu.wpi.first.publish-utils'
+
+apply from: '../config.gradle'
+
+model {
+    components {
+        halAthena(NativeLibrarySpec) {
+            binaries.all {
+                tasks.withType(CppCompile) {
+                    cppCompiler.args "-DATHENA"
+                }
+                    it.lib(project(':ni-libraries').generateNiDependencies())
+                    it.linker.args << '-L' + project(':ni-libraries').getLibraryPath()
+                }
+            sources {
+                cpp {
+                    source {
+                        srcDirs = [ '/src/hal/cpp/shared', '/src/hal/cpp/athena' ]
+                        includes = ["**/*.cpp"]
+                    }
+                    exportedHeaders {
+                        srcDirs = ["src/hal/headers"]
+                    }
+
+                }
+            }
+        }
+    }
+}
+
+model {
+    components {
+        halSim(NativeLibrarySpec) {
+          sources {
+                cpp {
+                    source {
+                        srcDirs = [ '/src/hal/cpp/shared', '/src/hal/cpp/sim' ]
+                        includes = ["**/*.cpp"]
+                    }
+                    exportedHeaders {
+                        srcDirs = ["src/hal/headers"]
+                    }
+                }
+            }
+        }
+    }
+}
+
+task cppSourcesZip(type: Zip) {
+    destinationDir = project.buildDir
+    classifier = "sources"
+
+    from('src/hal/cpp') {
+        into '/'
+    }
+}
+
+task cppHeadersZip(type: Zip) {
+    destinationDir = project.buildDir
+    classifier = "headers"
+
+    from('src/hal/headers') {
+        into '/'
+    }
+}
+
+  //  build.dependsOn cppHeadersZip
+  //  build.dependsOn cppSourcesZip
+
+apply from: 'publish.gradle'
