@@ -26,13 +26,32 @@ public class NiDependencySet implements NativeDependencySet {
     }
 }
 
-ext.generateNiDependencies = {
-  return new NiDependencySet(project)
+ext.addNiLibrariesToLinker = { binary->
+    binary.lib(new NiDependencySet(project))
+    binary.linker.args << "-L${project.projectDir}/lib/".toString()
 }
 
-ext.getLibraryPath = {
-  return "${project.projectDir}/lib/"
+task libZip(type: Zip) {
+    destinationDir = project.buildDir
+    classifier = "linuxathena"
+
+    from('lib') {
+        into '/linux/athena/shared/'
+        exclude 'genlinks'
+        exclude 'genlinks.bat'
+    }
 }
+
+task headersZip(type: Zip) {
+    destinationDir = project.buildDir
+    classifier = "headers"
+
+    from('include') {
+        into '/'
+    }
+}
+
+apply from: 'publish.gradle'
 
 task patchNiLibraries() {
     doLast {

@@ -18,9 +18,3 @@ if (!hasProperty('releaseType')) {
         releaseType = 'dev'
     }
 }
-
-allprojects {
-    repositories {
-        mavenCentral()
-    }
-}

@@ -6,6 +6,22 @@ apply plugin: 'edu.wpi.first.publish-utils'
 
 apply from: '../config.gradle'
 
+
+model {
+    dependencyConfigs {
+        wpiutil(DependencyConfig) {
+            groupId = 'edu.wpi.first.wpiutil'
+            artifactId = 'wpiutil-cpp'
+            headerClassifier = 'headers'
+            ext = 'zip'
+            version = '+'
+            sharedConfigs = [ halAthena: [ 'linux:athena' ] ]
+            staticConfigs = [ halSim: [ 'windows:x86', 'windows:x86-64', 'linux:x86', 'linux:x86-64', 'osx:x86', 'osx:x86-64',
+                                        'linux:raspbian', 'linux:armhf', 'linux:armv8', 'linux:arm' ] ]
+        }
+    }
+}
+
 model {
     components {
         halAthena(NativeLibrarySpec) {
@@ -13,9 +29,8 @@ model {
                 tasks.withType(CppCompile) {
                     cppCompiler.args "-DATHENA"
                 }
-                    it.lib(project(':ni-libraries').generateNiDependencies())
-                    it.linker.args << '-L' + project(':ni-libraries').getLibraryPath()
-                }
+                project(':ni-libraries').addNiLibrariesToLinker(it)
+            }
             sources {
                 cpp {
                     source {
@@ -67,8 +82,5 @@ task cppHeadersZip(type: Zip) {
         into '/'
     }
 }
-
-  //  build.dependsOn cppHeadersZip
-  //  build.dependsOn cppSourcesZip
 
 apply from: 'publish.gradle'
