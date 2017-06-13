@@ -9,14 +9,6 @@
 
 #include "HAL/HAL.h"
 
-extern "C" {
-#if !defined(ATHENA)
-uint64_t HAL_GetFPGATime(int32_t* status) {
-  return 0;
-}
-#endif
-}
-
 namespace hal {
 constexpr fpga_clock::time_point fpga_clock::min_time;
 

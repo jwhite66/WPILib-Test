@@ -21,7 +21,6 @@
 #include "HAL/cpp/priority_mutex.h"
 #include "HAL/handles/UnlimitedHandleResource.h"
 #include "support/SafeThread.h"
-#include "HAL/cpp/NotifierInternal.h"
 
 using namespace hal;
 
@@ -172,8 +171,10 @@ static void threadedNotifierHandler(uint64_t currentTimeInt,
   owner->Notify(currentTimeInt, handle);
 }
 
-namespace hal {
-HAL_NotifierHandle initializeNotifierNonThreaded(HAL_NotifierProcessFunction process, void* param, int32_t* status) {
+extern "C" {
+
+HAL_NotifierHandle HAL_InitializeNotifier(HAL_NotifierProcessFunction process,
+                                          void* param, int32_t* status) {
   if (!process) {
     *status = NULL_PARAMETER;
     return 0;
@@ -209,17 +210,15 @@ HAL_NotifierHandle initializeNotifierNonThreaded(HAL_NotifierProcessFunction pro
   notifiers = notifier;
   return handle;
 }
-}  // namespace hal
 
-extern "C" {
-
-HAL_NotifierHandle HAL_InitializeNotifier(HAL_NotifierProcessFunction process, void* param, int32_t* status) {
+HAL_NotifierHandle HAL_InitializeNotifierThreaded(
+    HAL_NotifierProcessFunction process, void* param, int32_t* status) {
   NotifierThreadOwner* notify = new NotifierThreadOwner;
   notify->Start();
   notify->SetFunc(process, param);
 
   auto notifierHandle =
-      initializeNotifierNonThreaded(threadedNotifierHandler, notify, status);
+      HAL_InitializeNotifier(threadedNotifierHandler, notify, status);
 
   if (notifierHandle == HAL_kInvalidHandle || *status != 0) {
     delete notify;

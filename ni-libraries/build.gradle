@@ -14,7 +14,7 @@ public class NiDependencySet implements NativeDependencySet {
     }
 
     private FileCollection getFiles() {
-      return m_project.files("${m_project.projectDir}/lib/libnilibraries.so")
+      return m_project.files("${m_project.projectDir}/lib/").filter { it.isFile() }
     }
 
     public FileCollection getLinkFiles() {
@@ -22,13 +22,12 @@ public class NiDependencySet implements NativeDependencySet {
     }
 
     public FileCollection getRuntimeFiles() {
-        return getFiles()
+        return m_project.files()
     }
 }
 
 ext.addNiLibrariesToLinker = { binary->
     binary.lib(new NiDependencySet(project))
-    binary.linker.args << "-L${project.projectDir}/lib/".toString()
 }
 
 task libZip(type: Zip) {
@@ -37,8 +36,6 @@ task libZip(type: Zip) {
 
     from('lib') {
         into '/linux/athena/shared/'
-        exclude 'genlinks'
-        exclude 'genlinks.bat'
     }
 }
 
@@ -58,7 +55,7 @@ task patchNiLibraries() {
         // Patch ChipObject headers to be self contained
         FileTree chipTree = fileTree(dir: "$rootDir/ni-libraries/include/FRC_FPGA_ChipObject/nRoboRIO_FPGANamespace")
         chipTree.each {File file ->
-            String contents = file.getText('UTF-8') 
+            String contents = file.getText('UTF-8')
             contents = contents.replaceAll('#include \"tSystemInterface.h\"', '#include \"../tSystem.h\"\n#include \"../tSystemInterface.h\"')
             file.write(contents, 'UTF-8')
         }
@@ -66,7 +63,7 @@ task patchNiLibraries() {
         // Patch NetComm headers to work on Windows
         FileTree netTree = fileTree(dir: "$rootDir/ni-libraries/include/FRC_NetworkCommunication")
         netTree.each {File file ->
-            String contents = file.getText('UTF-8') 
+            String contents = file.getText('UTF-8')
             contents = contents.replaceAll('#ifdef WIN32', '#ifdef _WIN32')
             contents = contents.replaceAll('# include <vxWorks_compat.h>', '#include <windows.h>')
             contents = contents.replaceAll('#include <vxWorks_compat.h>', '#include <windows.h>')
@@ -75,64 +72,9 @@ task patchNiLibraries() {
 
         FileTree allTree = fileTree(dir: "$rootDir/ni-libraries/include/")
         allTree.each {File file ->
-            String contents = file.getText('UTF-8') 
+            String contents = file.getText('UTF-8')
             contents = contents.replaceAll('\r\n', '\n')
             file.write(contents, 'UTF-8')
         }
-
-
-        // Generate genlinks
-        exec { 
-            workingDir "$rootDir/ni-libraries/lib"
-            if (OperatingSystem.current().isWindows()) {
-                commandLine "$rootDir/ni-libraries/lib/genlinks.bat"
-            } else {
-                executable "genlinks"
-            }
-        }
-        exec { 
-            workingDir "$rootDir/ni-libraries/lib"
-            if (OperatingSystem.current().isWindows()) {
-                commandLine "$rootDir/ni-libraries/lib/genlinks.bat"
-            } else {
-                executable "genlinks"
-            }
-        }
-        exec { 
-            workingDir "$rootDir/ni-libraries/lib"
-            if (OperatingSystem.current().isWindows()) {
-                commandLine "$rootDir/ni-libraries/lib/genlinks.bat"
-            } else {
-                executable "genlinks"
-            }
-        }
-        exec { 
-            workingDir "$rootDir/ni-libraries/lib"
-            if (OperatingSystem.current().isWindows()) {
-                commandLine "$rootDir/ni-libraries/lib/genlinks.bat"
-            } else {
-                executable "genlinks"
-            }
-        }
-        exec { 
-            workingDir "$rootDir/ni-libraries/lib"
-            if (OperatingSystem.current().isWindows()) {
-                commandLine "$rootDir/ni-libraries/lib/genlinks.bat"
-            } else {
-                executable "genlinks"
-            }
-        }
-        if (OperatingSystem.current().isWindows()) {
-            copy {
-                from "$rootDir/ni-libraries/lib/tmp"
-                into "$rootDir/ni-libraries/lib"
-                filter(FixCrLfFilter.class,
-                        eol:FixCrLfFilter.CrLf.newInstance("lf"))
-            }
-            delete {
-                delete "$rootDir/ni-libraries/lib/tmp"
-            }
-        }
-
     }
 }

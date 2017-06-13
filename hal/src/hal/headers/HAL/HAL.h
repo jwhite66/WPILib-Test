@@ -37,15 +37,7 @@
 
 #endif  // HAL_USE_LABVIEW
 
-#if defined (ATHENA)
-#include "FRC_NetworkCommunication/UsageReporting.h"
-#endif
-
 #include "HAL/Types.h"
-
-#if defined (ATHENA)
-namespace HALUsageReporting = nUsageReporting;
-#endif
 
 enum HAL_RuntimeType : int32_t { HAL_Athena, HAL_Mock };
 

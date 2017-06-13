@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------*/
-/* Copyright (c) FIRST 2016-2017. All Rights Reserved.                        */
+/* Copyright (c) FIRST 2016. All Rights Reserved.                             */
 /* Open Source Software - may be modified and shared by FRC teams. The code   */
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
@@ -7,39 +7,12 @@
 
 #include "HAL/HAL.h"
 
-#include <signal.h>  // linux for kill
-#include <sys/prctl.h>
-#include <unistd.h>
-
-#include <atomic>
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
-#include <mutex>
-#include <thread>
-
-#include "FRC_NetworkCommunication/CANSessionMux.h"
-#include "FRC_NetworkCommunication/UsageReporting.h"
-#include "FRC_NetworkCommunication/FRCComm.h"
-#include "FRC_NetworkCommunication/LoadOut.h"
-#include "HAL/ChipObject.h"
-#include "HAL/DriverStation.h"
 #include "HAL/Errors.h"
-#include "HAL/Notifier.h"
-#include "HAL/cpp/priority_mutex.h"
+#include "HAL/DriverStation.h"
+#include "ErrorsInternal.h"
 #include "HAL/handles/HandlesInternal.h"
-#include "ctre/ctre.h"
-#include "visa/visa.h"
-
-using namespace hal;
-
-static std::unique_ptr<tGlobal> global;
-static std::unique_ptr<tSysWatchdog> watchdog;
-
-static hal::priority_mutex timeMutex;
-static uint32_t timeEpoch = 0;
-static uint32_t prevFPGATime = 0;
-static HAL_NotifierHandle rolloverNotifier = 0;
+#include "MockData/RoboRioDataInternal.h"
+#include "MockHooksInternal.h"
 
 using namespace hal;
 
@@ -165,16 +138,6 @@ const char* HAL_GetErrorMessage(int32_t code) {
       return VI_ERROR_INV_PARAMETER_MESSAGE;
     case HAL_PWM_SCALE_ERROR:
       return HAL_PWM_SCALE_ERROR_MESSAGE;
-    case HAL_SERIAL_PORT_NOT_FOUND:
-      return HAL_SERIAL_PORT_NOT_FOUND_MESSAGE;
-    case HAL_THREAD_PRIORITY_ERROR:
-      return HAL_THREAD_PRIORITY_ERROR_MESSAGE;
-    case HAL_THREAD_PRIORITY_RANGE_ERROR:
-      return HAL_THREAD_PRIORITY_RANGE_ERROR_MESSAGE;
-    case HAL_SERIAL_PORT_OPEN_ERROR:
-      return HAL_SERIAL_PORT_OPEN_ERROR_MESSAGE;
-    case HAL_SERIAL_PORT_ERROR:
-      return HAL_SERIAL_PORT_ERROR_MESSAGE;
     default:
       return "Unknown error status";
   }
@@ -183,7 +146,7 @@ const char* HAL_GetErrorMessage(int32_t code) {
 /**
  * Returns the runtime type of this HAL
  */
-HAL_RuntimeType HAL_GetRuntimeType() { return HAL_Athena; }
+HAL_RuntimeType HAL_GetRuntimeType() { return HAL_Mock; }
 
 /**
  * Return the FPGA Version number.
@@ -191,11 +154,7 @@ HAL_RuntimeType HAL_GetRuntimeType() { return HAL_Athena; }
  * @return FPGA Version number.
  */
 int32_t HAL_GetFPGAVersion(int32_t* status) {
-  if (!global) {
-    *status = NiFpga_Status_ResourceNotInitialized;
-    return 0;
-  }
-  return global->readVersion(status);
+  return 2018; // Automatically script this at some point
 }
 
 /**
@@ -207,11 +166,7 @@ int32_t HAL_GetFPGAVersion(int32_t* status) {
  * @return FPGA Revision number.
  */
 int64_t HAL_GetFPGARevision(int32_t* status) {
-  if (!global) {
-    *status = NiFpga_Status_ResourceNotInitialized;
-    return 0;
-  }
-  return global->readRevision(status);
+  return 0; // TODO: Find a better number to return;
 }
 
 /**
@@ -221,18 +176,7 @@ int64_t HAL_GetFPGARevision(int32_t* status) {
  * reset).
  */
 uint64_t HAL_GetFPGATime(int32_t* status) {
-  if (!global) {
-    *status = NiFpga_Status_ResourceNotInitialized;
-    return 0;
-  }
-  std::lock_guard<hal::priority_mutex> lock(timeMutex);
-  uint32_t fpgaTime = global->readLocalTime(status);
-  if (*status != 0) return 0;
-  // check for rollover
-  if (fpgaTime < prevFPGATime) ++timeEpoch;
-  prevFPGATime = fpgaTime;
-  return static_cast<uint64_t>(timeEpoch) << 32 |
-         static_cast<uint64_t>(fpgaTime);
+  return hal::GetFPGATime();
 }
 
 /**
@@ -240,138 +184,26 @@ uint64_t HAL_GetFPGATime(int32_t* status) {
  * @return true if the button is currently pressed down
  */
 HAL_Bool HAL_GetFPGAButton(int32_t* status) {
-  if (!global) {
-    *status = NiFpga_Status_ResourceNotInitialized;
-    return false;
-  }
-  return global->readUserButton(status);
+  return SimRoboRioData[0].GetFPGAButton();
 }
 
 HAL_Bool HAL_GetSystemActive(int32_t* status) {
-  if (!watchdog) {
-    *status = NiFpga_Status_ResourceNotInitialized;
-    return false;
-  }
-  return watchdog->readStatus_SystemActive(status);
+  return true; // Figure out if we need to handle this
 }
 
 HAL_Bool HAL_GetBrownedOut(int32_t* status) {
-  if (!watchdog) {
-    *status = NiFpga_Status_ResourceNotInitialized;
-    return false;
-  }
-  return !(watchdog->readStatus_PowerAlive(status));
+  return false; // Figure out if we need to detect a brownout condition
 }
 
-static void timerRollover(uint64_t currentTime, HAL_NotifierHandle handle) {
-  // reschedule timer for next rollover
-  int32_t status = 0;
-  HAL_UpdateNotifierAlarm(handle, currentTime + 0x80000000ULL, &status);
-}
-
-void HAL_BaseInitialize(int32_t* status) {
-  static std::atomic_bool initialized{false};
-  static hal::priority_mutex initializeMutex;
-  // Initial check, as if it's true initialization has finished
-  if (initialized) return;
-
-  std::lock_guard<hal::priority_mutex> lock(initializeMutex);
-  // Second check in case another thread was waiting
-  if (initialized) return;
-  // image 4; Fixes errors caused by multiple processes. Talk to NI about this
-  nFPGA::nRoboRIO_FPGANamespace::g_currentTargetClass =
-      nLoadOut::kTargetClass_RoboRIO;
-
-  global.reset(tGlobal::create(status));
-  watchdog.reset(tSysWatchdog::create(status));
-  initialized = true;
-}
-
-/**
- * Call this to start up HAL. This is required for robot programs.
- */
 int32_t HAL_Initialize(int32_t mode) {
-  setlinebuf(stdin);
-  setlinebuf(stdout);
-
-  prctl(PR_SET_PDEATHSIG, SIGTERM);
-
-  FRC_NetworkCommunication_Reserve(nullptr);
-
-  std::atexit([]() {
-    // Unregister our new data condition variable.
-    setNewDataSem(nullptr);
-  });
-
-  int32_t status = 0;
-  HAL_BaseInitialize(&status);
-
-  if (!rolloverNotifier)
-    rolloverNotifier = HAL_InitializeNotifier(timerRollover, nullptr, &status);
-  if (status == 0) {
-    uint64_t curTime = HAL_GetFPGATime(&status);
-    if (status == 0)
-      HAL_UpdateNotifierAlarm(rolloverNotifier, curTime + 0x80000000ULL,
-                              &status);
-  }
-
-  // Kill any previous robot programs
-  std::fstream fs;
-  // By making this both in/out, it won't give us an error if it doesnt exist
-  fs.open("/var/lock/frc.pid", std::fstream::in | std::fstream::out);
-  if (fs.bad()) return 0;
-
-  pid_t pid = 0;
-  if (!fs.eof() && !fs.fail()) {
-    fs >> pid;
-    // see if the pid is around, but we don't want to mess with init id=1, or
-    // ourselves
-    if (pid >= 2 && kill(pid, 0) == 0 && pid != getpid()) {
-      std::cout << "Killing previously running FRC program..." << std::endl;
-      kill(pid, SIGTERM);  // try to kill it
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      if (kill(pid, 0) == 0) {
-        // still not successfull
-        if (mode == 0) {
-          std::cout << "FRC pid " << pid
-                    << " did not die within 110ms. Aborting" << std::endl;
-          return 0;              // just fail
-        } else if (mode == 1) {  // kill -9 it
-          kill(pid, SIGKILL);
-        } else {
-          std::cout << "WARNING: FRC pid " << pid
-                    << " did not die within 110ms." << std::endl;
-        }
-      }
-    }
-  }
-  fs.close();
-  // we will re-open it write only to truncate the file
-  fs.open("/var/lock/frc.pid", std::fstream::out | std::fstream::trunc);
-  fs.seekp(0);
-  pid = getpid();
-  fs << pid << std::endl;
-  fs.close();
-
+  hal::RestartTiming();
   HAL_InitializeDriverStation();
-
-  return 1;
+  return 1; // Add initialization if we need to at a later point
 }
 
 int64_t HAL_Report(int32_t resource, int32_t instanceNumber, int32_t context,
                    const char* feature) {
-  if (feature == nullptr) {
-    feature = "";
-  }
-
-  return FRC_NetworkCommunication_nUsageReporting_report(
-      resource, instanceNumber, context, feature);
+  return 0; // Do nothing for now
 }
 
-// TODO: HACKS
-// No need for header definitions, as we should not run from user code.
-void NumericArrayResize() {}
-void RTSetCleanupProc() {}
-void EDVR_CreateReference() {}
-
-}  // extern "C"
+} // extern "C"
