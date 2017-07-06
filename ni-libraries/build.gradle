@@ -76,5 +76,16 @@ task patchNiLibraries() {
             contents = contents.replaceAll('\r\n', '\n')
             file.write(contents, 'UTF-8')
         }
+
+        copy {
+            from("$rootDir/ni-libraries/include/FRC_NetworkCommunication") {
+                include 'UsageReporting.h'
+            }
+            into "$rootDir/hal/src/hal/headers/HAL"
+        }
+
+        delete {
+            delete "$rootDir/ni-libraries/include/FRC_NetworkCommunication/UsageReporting.h"
+        }
     }
 }

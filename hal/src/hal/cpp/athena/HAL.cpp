@@ -19,7 +19,6 @@
 #include <thread>
 
 #include "FRC_NetworkCommunication/CANSessionMux.h"
-#include "FRC_NetworkCommunication/UsageReporting.h"
 #include "FRC_NetworkCommunication/FRCComm.h"
 #include "FRC_NetworkCommunication/LoadOut.h"
 #include "HAL/ChipObject.h"

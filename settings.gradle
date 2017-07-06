@@ -1,5 +1,6 @@
 include 'gmock'
 include 'ni-libraries'
 include 'hal'
+include 'wpilibc'
 
 //include 'wpilibc'

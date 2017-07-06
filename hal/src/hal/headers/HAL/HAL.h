@@ -37,7 +37,10 @@
 
 #endif  // HAL_USE_LABVIEW
 
+#include "UsageReporting.h"
 #include "HAL/Types.h"
+
+namespace HALUsageReporting = nUsageReporting;
 
 enum HAL_RuntimeType : int32_t { HAL_Athena, HAL_Mock };
 
