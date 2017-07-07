@@ -195,10 +195,10 @@ HAL_Bool HAL_GetBrownedOut(int32_t* status) {
   return false; // Figure out if we need to detect a brownout condition
 }
 
-int32_t HAL_Initialize(int32_t mode) {
+HAL_Bool HAL_Initialize(int32_t timeout, int32_t mode) {
   hal::RestartTiming();
   HAL_InitializeDriverStation();
-  return 1; // Add initialization if we need to at a later point
+  return true; // Add initialization if we need to at a later point
 }
 
 int64_t HAL_Report(int32_t resource, int32_t instanceNumber, int32_t context,

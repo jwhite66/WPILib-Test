@@ -97,6 +97,13 @@ static UnlimitedHandleResource<HAL_NotifierHandle, Notifier,
                                HAL_HandleEnum::Notifier>
     notifierHandles;
 
+extern "C" {
+
+HAL_NotifierHandle HAL_InitializeNotifierNonThreadedUnsafe(
+    HAL_NotifierProcessFunction process,
+    void* param, int32_t* status) {
+  return HAL_InitializeNotifier(process, param, status);
+}
 
 HAL_NotifierHandle HAL_InitializeNotifier(HAL_NotifierProcessFunction process,
                                           void* param, int32_t* status) {
@@ -121,10 +128,7 @@ HAL_NotifierHandle HAL_InitializeNotifier(HAL_NotifierProcessFunction process,
 
   return handle;
 }
-HAL_NotifierHandle HAL_InitializeNotifierThreaded(
-    HAL_NotifierProcessFunction process, void* param, int32_t* status) {
-  return HAL_InitializeNotifier(process, param, status);
-}
+
 void HAL_CleanNotifier(HAL_NotifierHandle notifierHandle, int32_t* status) {
   auto notifier = notifierHandles.Get(notifierHandle);
   if (!notifier) return;
@@ -148,3 +152,5 @@ void HAL_StopNotifierAlarm(HAL_NotifierHandle notifierHandle, int32_t* status) {
   if (!notifier) return;
   notifier->thread->StopAlarm();
 }
+
+} // extern "C"

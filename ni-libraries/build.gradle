@@ -77,6 +77,9 @@ task patchNiLibraries() {
             file.write(contents, 'UTF-8')
         }
 
+        // Move UsageReporting header to the HAL, because it is necessary for our
+        // UsageReporting in WPILibC.
+
         copy {
             from("$rootDir/ni-libraries/include/FRC_NetworkCommunication") {
                 include 'UsageReporting.h'

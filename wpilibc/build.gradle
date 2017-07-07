@@ -16,7 +16,8 @@ model {
             headerClassifier = 'headers'
             ext = 'zip'
             version = '+'
-            sharedConfigs = [ wpilibc: [] ]
+            sharedConfigs = [ wpilibc: [],
+                              wpilibcTest: [] ]
         }
         ntcore(DependencyConfig) {
             groupId = 'edu.wpi.first.ntcore'
@@ -24,7 +25,8 @@ model {
             headerClassifier = 'headers'
             ext = 'zip'
             version = '+'
-            sharedConfigs = [ wpilibc: [] ]
+            sharedConfigs = [ wpilibc: [],
+                              wpilibcTest: [] ]
         }
     }
 }
@@ -50,7 +52,7 @@ model {
             binaries.all { binary->
                 if (binary.targetPlatform.architecture.name == 'athena') {
                     tasks.withType(CppCompile) {
-                        cppCompiler.args "-DATHENA"
+                        cppCompiler.args "-DCONFIG_ATHENA"
                     }
                     project(':ni-libraries').addNiLibrariesToLinker(binary)
                     binary.lib project: ':hal', library: 'halAthena', linkage: 'shared'
@@ -86,4 +88,4 @@ task cppHeadersZip(type: Zip) {
     }
 }
 
-//apply from: 'publish.gradle'
+apply from: 'publish.gradle'

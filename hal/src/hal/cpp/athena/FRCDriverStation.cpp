@@ -7,7 +7,6 @@
 
 #include <atomic>
 #include <chrono>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
@@ -16,6 +15,7 @@
 #include "HAL/DriverStation.h"
 #include "HAL/cpp/priority_condition_variable.h"
 #include "HAL/cpp/priority_mutex.h"
+#include "llvm/raw_ostream.h"
 
 static_assert(sizeof(int32_t) >= sizeof(int),
               "FRC_NetworkComm status variable is larger than 32 bits");
@@ -66,12 +66,12 @@ int32_t HAL_SendError(HAL_Bool isError, int32_t errorCode, HAL_Bool isLVCode,
                                                 details, location, callStack);
     if (printMsg) {
       if (location && location[0] != '\0') {
-        std::fprintf(stderr, "%s at %s: ", isError ? "Error" : "Warning",
-                     location);
+        llvm::errs() << (isError ? "Error" : "Warning") << " at " << location
+                     << ": ";
       }
-      std::fprintf(stderr, "%s\n", details);
+      llvm::errs() << details << "\n";
       if (callStack && callStack[0] != '\0') {
-        std::fprintf(stderr, "%s\n", callStack);
+        llvm::errs() << callStack << "\n";
       }
     }
     if (i == KEEP_MSGS) {
@@ -204,6 +204,8 @@ char* HAL_GetJoystickName(int32_t joystickNum) {
     return name;
   }
 }
+
+void HAL_FreeJoystickName(char* name) { std::free(name); }
 
 int32_t HAL_GetJoystickAxisType(int32_t joystickNum, int32_t axis) {
   HAL_JoystickDescriptor joystickDesc;

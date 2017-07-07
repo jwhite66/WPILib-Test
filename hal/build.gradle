@@ -16,7 +16,7 @@ model {
             headerClassifier = 'headers'
             ext = 'zip'
             version = '+'
-            sharedConfigs = [ halAthena: [], halSim: [] ]
+            sharedConfigs = [ halAthena: [], halSim: [], halSimTest: [] ]
         }
     }
 }
@@ -43,7 +43,7 @@ model {
             binaries.all { binary->
                 if (binary.targetPlatform.architecture.name == 'athena') {
                     tasks.withType(CppCompile) {
-                        cppCompiler.args "-DATHENA"
+                        cppCompiler.args "-DCONFIG_ATHENA"
                     }
                     project(':ni-libraries').addNiLibrariesToLinker(binary)
                 }
