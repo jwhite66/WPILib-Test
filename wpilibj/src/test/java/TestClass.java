@@ -10,8 +10,14 @@ public class TestClass {
     }
 
     @Test
-    public void jniTest() {
+    public void jniTestNtCore() {
         edu.wpi.first.wpilibj.networktables.NetworkTablesJNI.flush();
+        assertEquals(2,2);
+    }
+
+    @Test
+    public void jniTestWpiLibJ() {
+        edu.wpi.first.wpilibj.hal.HALUtil.getHALRuntimeType();
         assertEquals(2,2);
     }
 }

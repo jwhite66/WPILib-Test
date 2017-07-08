@@ -115,7 +115,7 @@ model {
             x86SymbolFilter = { symbols->
                 def retList = []
                 symbols.each { symbol->
-                    if (symbol.startsWith('Java_')) {
+                    if (symbol.startsWith('Java_') || symbol.startsWith('JNI_')) {
                         retList << symbol
                     }
                 }
@@ -124,7 +124,7 @@ model {
             x64SymbolFilter = { symbols->
                 def retList = []
                 symbols.each { symbol->
-                    if (symbol.startsWith('Java_')) {
+                    if (symbol.startsWith('Java_') || symbol.startsWith('JNI_')) {
                         retList << symbol
                     }
                 }
@@ -135,7 +135,7 @@ model {
             x86SymbolFilter = { symbols->
                 def retList = []
                 symbols.each { symbol->
-                    if (symbol.startsWith('Java_')) {
+                    if (symbol.startsWith('Java_') || symbol.startsWith('JNI_')) {
                         retList << symbol
                     }
                 }
@@ -144,7 +144,7 @@ model {
             x64SymbolFilter = { symbols->
                 def retList = []
                 symbols.each { symbol->
-                    if (symbol.startsWith('Java_')) {
+                    if (symbol.startsWith('Java_') || symbol.startsWith('JNI_')) {
                         retList << symbol
                     }
                 }
@@ -163,7 +163,7 @@ model {
             ext = 'zip'
             version = '+'
             sharedConfigs = [ wpilibJNIShared: [] ]
-            staticConfigs = [ wpilibJNIStatic: [] ]
+            staticConfigs = [ wpilibJNIStatic: [], wpilibJniTest: [] ]
         }
     }
 }
@@ -222,3 +222,36 @@ model {
         }
     }
 }
+
+task cppSourcesZip(type: Zip) {
+    destinationDir = project.buildDir
+    classifier = "sources"
+
+    from('src/wpilibJNI/cpp') {
+        into '/'
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadoc(type: Javadoc, overwrite: true) {
+    javadoc.options.links("http://docs.oracle.com/javase/8/docs/api/")
+    options.addStringOption "tag", "pre:a:Pre-Condition"
+//    options.addStringOption('Xdoclint:accessibility,syntax,reference,html', '-quiet')
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+    archives cppSourcesZip
+}
+
+apply from: 'publish.gradle'

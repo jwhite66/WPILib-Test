@@ -8,7 +8,7 @@
 
 static std::atomic<bool> programStarted {false};
 
-static std::atomic<uint64_t> programStartTime {wpi::Now() / 10};
+static std::atomic<uint64_t> programStartTime {0};
 
 namespace hal {
 void RestartTiming() {

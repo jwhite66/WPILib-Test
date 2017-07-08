@@ -14,7 +14,8 @@ public class NiDependencySet implements NativeDependencySet {
     }
 
     private FileCollection getFiles() {
-      return m_project.files("${m_project.projectDir}/lib/").filter { it.isFile() }
+      def f = m_project.fileTree("${m_project.projectDir}/lib").filter { it.isFile() }
+      return f
     }
 
     public FileCollection getLinkFiles() {
@@ -22,7 +23,7 @@ public class NiDependencySet implements NativeDependencySet {
     }
 
     public FileCollection getRuntimeFiles() {
-        return m_project.files()
+        return getFiles()
     }
 }
 
