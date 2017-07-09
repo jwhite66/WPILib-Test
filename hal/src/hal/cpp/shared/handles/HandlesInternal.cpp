@@ -21,7 +21,7 @@ static priority_mutex& GetGlobalHandleMutex() {
 }
 
 HandleBase::HandleBase() {
-  std::lock_guard<std::mutex> lock(GetGlobalHandleMutex());
+  std::lock_guard<priority_mutex> lock(GetGlobalHandleMutex());
   auto index = std::find(globalHandles.begin(), globalHandles.end(), this);
   if (index == globalHandles.end()) {
     globalHandles.push_back(this);
@@ -31,7 +31,7 @@ HandleBase::HandleBase() {
 }
 
 HandleBase::~HandleBase() {
-  std::lock_guard<std::mutex> lock(GetGlobalHandleMutex());
+  std::lock_guard<priority_mutex> lock(GetGlobalHandleMutex());
   auto index = std::find(globalHandles.begin(), globalHandles.end(), this);
   if (index != globalHandles.end()) {
     *index = nullptr;
@@ -46,7 +46,7 @@ void HandleBase::ResetHandles() {
 }
 
 void HandleBase::ResetGlobalHandles() {
-  std::unique_lock<std::mutex> lock(GetGlobalHandleMutex());
+  std::unique_lock<priority_mutex> lock(GetGlobalHandleMutex());
   for (auto&& i : globalHandles) {
     if (i != nullptr) {
       lock.unlock();
