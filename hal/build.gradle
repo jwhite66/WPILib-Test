@@ -16,7 +16,7 @@ model {
             headerClassifier = 'headers'
             ext = 'zip'
             version = '+'
-            sharedConfigs = [ halAthena: [], halSim: [], halSimTest: [] ]
+            sharedConfigs = [ halAthena: [], halSim: [], halSimTest: [], halSimStaticDeps: [], halSimStaticDepsTest: [] ]
         }
     }
 }
@@ -32,6 +32,26 @@ model {
                                   '_CT??_R0?AVbad_cast',
                                   '_CT??_R0?AVruntime_error', '_CT??_R0?AVsystem_error', '_CTA5?AVfailure',
                                   '_TI5?AVfailure' ]
+        }
+        halSimStaticDeps(ExportsConfig) {
+            x86SymbolFilter = { symbols->
+                def retList = []
+                symbols.each { symbol->
+                    if (symbol.startsWith('HAL_')) {
+                        retList << symbol
+                    }
+                }
+                return retList
+            }
+            x64SymbolFilter = { symbols->
+                def retList = []
+                symbols.each { symbol->
+                    if (symbol.startsWith('HAL_')) {
+                        retList << symbol
+                    }
+                }
+                return retList
+            }
         }
     }
 }
@@ -79,11 +99,33 @@ model {
                 }
             }
         }
+
+        halSimStaticDeps(NativeLibrarySpec) {
+            baseName = 'wpiHal'
+            sources {
+                cpp {
+                    source {
+                        srcDirs = [ '/src/hal/cpp/shared', '/src/hal/cpp/sim' ]
+                        includes = ["**/*.cpp"]
+                    }
+                    exportedHeaders {
+                        srcDirs = ["src/hal/headers"]
+                    }
+                }
+            }
+        }
+    }
+    testSuites {
+        halSimStaticDepsTest {
+            sources {
+                cpp.source.srcDir '/src/halSimTest'
+            }
+        }
     }
     binaries {
         withType(GoogleTestTestSuiteBinarySpec) {
             lib project: ':gmock', library: 'gmock', linkage: 'static'
-            lib library: 'halSim', linkage: 'shared'
+            lib library: it.component.testedComponent.name, linkage: 'shared'
         }
     }
 }
