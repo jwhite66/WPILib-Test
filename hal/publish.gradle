@@ -38,5 +38,14 @@ model {
             version = pubVersion
             includeComponents = [ 'halSim' ]
         }
+        if (project.hasProperty('buildHalStaticDeps')) {
+            cppStaticDeps(PublishingConfig) {
+                isNative = true
+                artifactId = baseArtifactId + 'StaticDeps'
+                groupId = artifactGroupId
+                version = pubVersion
+                includeComponents = [ 'halSimStaticDeps' ]
+            }
+        }
     }
 }

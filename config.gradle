@@ -19,8 +19,26 @@ def macReleaseCompilerArgs = ['-O2']
 def macDebugCompilerArgs = ['-O0']
 def mac32BitArg = '-m32'
 
-def windowsPlatformDetect = { config->
-    return OperatingSystem.current().isWindows()
+def buildAll = project.hasProperty('buildAll')
+
+def windows64PlatformDetect = { config->
+    def arch = System.getProperty("os.arch")
+    def isWin = OperatingSystem.current().isWindows()
+    if (buildAll) {
+        return isWin
+    } else {
+        return isWin && arch == 'amd64'
+    }
+}
+
+def windows32PlatformDetect = { config->
+    def arch = System.getProperty("os.arch")
+    def isWin = OperatingSystem.current().isWindows()
+    if (buildAll) {
+        return isWin
+    } else {
+        return isWin && arch == 'x86'
+    }
 }
 
 def linuxIntelPlatformDetect = { config->
@@ -48,7 +66,7 @@ model {
             linkerArgs = windowsLinkerArgs
             releaseCompilerArgs = windowsReleaseCompilerArgs
             compilerFamily = 'VisualCpp'
-            detectPlatform = windowsPlatformDetect
+            detectPlatform = windows32PlatformDetect
             exclude << 'halAthena'
         }
         winX64(BuildConfig) {
@@ -58,7 +76,7 @@ model {
             linkerArgs = windowsLinkerArgs
             releaseCompilerArgs = windowsReleaseCompilerArgs
             compilerFamily = 'VisualCpp'
-            detectPlatform = windowsPlatformDetect
+            detectPlatform = windows64PlatformDetect
             exclude << 'halAthena'
         }
         linuxX86(BuildConfig) {

@@ -99,33 +99,47 @@ model {
                 }
             }
         }
-
-        halSimStaticDeps(NativeLibrarySpec) {
-            baseName = 'wpiHal'
-            sources {
-                cpp {
-                    source {
-                        srcDirs = [ '/src/hal/cpp/shared', '/src/hal/cpp/sim' ]
-                        includes = ["**/*.cpp"]
-                    }
-                    exportedHeaders {
-                        srcDirs = ["src/hal/headers"]
+        if (project.hasProperty('buildHalStaticDeps')) {
+            halSimStaticDeps(NativeLibrarySpec) {
+                baseName = 'wpiHal'
+                sources {
+                    cpp {
+                        source {
+                            srcDirs = [ '/src/hal/cpp/shared', '/src/hal/cpp/sim' ]
+                            includes = ["**/*.cpp"]
+                        }
+                        exportedHeaders {
+                            srcDirs = ["src/hal/headers"]
+                        }
                     }
                 }
             }
         }
     }
     testSuites {
-        halSimStaticDepsTest {
+        if (project.hasProperty('buildHalStaticDeps')) {
+            halSimStaticDepsTest {
+                sources {
+                    cpp.source.srcDir '/src/halSimTest'
+                }
+            }
+        }
+        halSimTest {
             sources {
                 cpp.source.srcDir '/src/halSimTest'
             }
         }
     }
     binaries {
+        withType(StaticLibraryBinarySpec) {
+            println it.component
+            if (it.component.name == 'halSimStaticDeps') {
+                println "disabling " + it.component.name
+                buildable = false
+            }
+        }
         withType(GoogleTestTestSuiteBinarySpec) {
             lib project: ':gmock', library: 'gmock', linkage: 'static'
-            lib library: it.component.testedComponent.name, linkage: 'shared'
         }
     }
 }
