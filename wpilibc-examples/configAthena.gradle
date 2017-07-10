@@ -1,0 +1,74 @@
+import edu.wpi.first.nativeutils.*
+import org.gradle.internal.os.OperatingSystem
+
+def windowsCompilerArgs = ['/EHsc', '/DNOMINMAX', '/D_SCL_SECURE_NO_WARNINGS', '/D_WINSOCK_DEPRECATED_NO_WARNINGS',
+                           '/Zi', '/FS', '/Zc:inline', '/MT']
+def windowsReleaseCompilerArgs = ['/O2']
+def windowsLinkerArgs = ['/DEBUG:FULL']
+
+def linuxCompilerArgs = ['-std=c++11', '-Wformat=2', '-Wall', '-Wextra', '-Werror', '-pedantic', '-Wno-psabi', '-g',
+                         '-Wno-unused-parameter', '-fPIC', '-rdynamic', '-Wno-error=deprecated-declarations', '-pthread']
+def linuxLinkerArgs = ['-rdynamic', '-pthread']
+def linuxReleaseCompilerArgs = ['-O2']
+def linuxDebugCompilerArgs = ['-O0']
+def linux32BitArg = '-m32'
+
+def macCompilerArgs =  ['-std=c++11', '-Wall', '-Wextra', '-Werror', '-pedantic-errors', '-fPIC', '-g',
+                            '-Wno-unused-parameter', '-Wno-missing-field-initializers', '-Wno-unused-private-field']
+def macReleaseCompilerArgs = ['-O2']
+def macDebugCompilerArgs = ['-O0']
+def mac32BitArg = '-m32'
+
+def buildAll = project.hasProperty('buildAll')
+
+def windows64PlatformDetect = { config->
+    def arch = System.getProperty("os.arch")
+    def isWin = OperatingSystem.current().isWindows()
+    if (buildAll) {
+        return isWin
+    } else {
+        return isWin && arch == 'amd64'
+    }
+}
+
+def windows32PlatformDetect = { config->
+    def arch = System.getProperty("os.arch")
+    def isWin = OperatingSystem.current().isWindows()
+    if (buildAll) {
+        return isWin
+    } else {
+        return isWin && arch == 'x86'
+    }
+}
+
+def linuxIntelPlatformDetect = { config->
+    def arch = System.getProperty("os.arch")
+    def isIntel = (arch == 'amd64' || arch == 'i386')
+    return OperatingSystem.current().isLinux() && isIntel
+}
+
+def linuxArmPlatformDetect = { config->
+    def arch = System.getProperty("os.arch")
+    def isIntel = (arch == 'amd64' || arch == 'i386')
+    return OperatingSystem.current().isLinux() && !isIntel
+}
+
+def macPlatformDetect = { config->
+    return OperatingSystem.current().isMacOsX()
+}
+
+model {
+    buildConfigs {
+        roboRio(CrossBuildConfig) {
+            architecture = 'athena'
+            operatingSystem = 'linux'
+            toolChainPrefix = 'arm-frc-linux-gnueabi-'
+            compilerArgs = linuxCompilerArgs
+            linkerArgs = linuxLinkerArgs
+            debugCompilerArgs = linuxDebugCompilerArgs
+            releaseCompilerArgs = linuxReleaseCompilerArgs
+            releaseStripBinaries = true
+            compilerFamily = 'Gcc'
+        }
+    }
+}
