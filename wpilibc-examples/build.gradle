@@ -5,7 +5,7 @@ apply plugin: 'visual-studio'
 apply plugin: 'edu.wpi.first.native-utils'
 apply plugin: 'edu.wpi.first.dependency-utils'
 
-apply from: 'configAthena.gradle'
+apply from: '../configAthena.gradle'
 
 ext.examplesMap = [:]
 
@@ -40,7 +40,7 @@ class ExampleComponentRules extends RuleSource {
     void createComponent(ComponentSpecContainer tasks, ProjectLayout projectLayout) {
         projectLayout.projectIdentifier.examplesMap.each {
             tasks.create(it.key, NativeLibrarySpec) {
-                binaries.each { binary->
+                binaries.all { binary->
                     project(':ni-libraries').addNiLibrariesToLinker(binary)
                     binary.lib project: ':hal', library: 'halAthena', linkage: 'shared'
                     binary.lib project: ':wpilibc', library: 'wpilibc', linkage: 'shared'

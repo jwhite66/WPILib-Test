@@ -135,7 +135,6 @@ model {
             releaseCompilerArgs = linuxReleaseCompilerArgs
             releaseStripBinaries = true
             compilerFamily = 'Gcc'
-            exclude << 'gmock'
             exclude << 'halSim'
         }
         raspbian(CrossBuildConfig) {

@@ -1,0 +1,64 @@
+import org.gradle.language.base.internal.ProjectLayout
+
+apply plugin: 'cpp'
+apply plugin: 'visual-studio'
+apply plugin: 'edu.wpi.first.native-utils'
+apply plugin: 'edu.wpi.first.exports-utils'
+apply plugin: 'edu.wpi.first.dependency-utils'
+apply plugin: 'edu.wpi.first.publish-utils'
+
+apply from: '../configAthena.gradle'
+
+ext.examplesMap = [:]
+
+model {
+    dependencyConfigs {
+        wpiutil(DependencyConfig) {
+            groupId = 'edu.wpi.first.wpiutil'
+            artifactId = 'wpiutil-cpp'
+            headerClassifier = 'headers'
+            ext = 'zip'
+            version = '+'
+            sharedConfigs = [ FRCUserProgram: [] ]
+        }
+        ntcore(DependencyConfig) {
+            groupId = 'edu.wpi.first.ntcore'
+            artifactId = 'ntcore-cpp'
+            headerClassifier = 'headers'
+            ext = 'zip'
+            version = '+'
+            sharedConfigs = [ FRCUserProgram: [] ]
+        }
+    }
+}
+
+model {
+    components {
+        FRCUserProgram(NativeExecutableSpec) {
+            sources {
+                cpp {
+                    source {
+                        srcDirs = ['src/gtest/src', 'src/FRCUserProgram/cpp']
+                        includes = ['*-all.cc', '*.cpp']
+                    }
+                    exportedHeaders {
+                        srcDirs = ['src/gtest/include', 'src/FRCUserProgram/headers']
+                        includes = ['**/*.h', '**/*.cc']
+                    }
+                }
+            }
+            binaries.all { binary->
+                binary.tasks.withType(CppCompile) {
+                    cppCompiler.args "-DNAMESPACED_WPILIB"
+                    cppCompiler.args "-DNAMESPACED_PRIORITY"
+                    cppCompiler.args "-Wno-missing-field-initializer"
+                }
+                binary.lib project: ':gmock', library: 'gmock', linkage: 'static'
+                project(':ni-libraries').addNiLibrariesToLinker(binary)
+                binary.lib project: ':hal', library: 'halAthena', linkage: 'shared'
+                binary.lib project: ':wpilibc', library: 'wpilibc', linkage: 'shared'
+            }
+        }
+    }
+}
+
