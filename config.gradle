@@ -41,10 +41,26 @@ def windows32PlatformDetect = { config->
     }
 }
 
-def linuxIntelPlatformDetect = { config->
+def linux32IntelPlatformDetect = { config->
     def arch = System.getProperty("os.arch")
+    def isLinux = OperatingSystem.current().isLinux()
     def isIntel = (arch == 'amd64' || arch == 'i386')
-    return OperatingSystem.current().isLinux() && isIntel
+    if (buildAll) {
+        return isLinux && isIntel
+    } else {
+        return isLinux && arch == 'i386'
+    }
+}
+
+def linux64IntelPlatformDetect = { config->
+    def arch = System.getProperty("os.arch")
+    def isLinux = OperatingSystem.current().isLinux()
+    def isIntel = (arch == 'amd64' || arch == 'i386')
+    if (buildAll) {
+        return isLinux && isIntel
+    } else {
+        return isLinux && arch == 'amd64'
+    }
 }
 
 def linuxArmPlatformDetect = { config->
@@ -53,8 +69,24 @@ def linuxArmPlatformDetect = { config->
     return OperatingSystem.current().isLinux() && !isIntel
 }
 
-def macPlatformDetect = { config->
-    return OperatingSystem.current().isMacOsX()
+def mac64PlatformDetect = { config->
+    def arch = System.getProperty("os.arch")
+    def isMac = OperatingSystem.current().isMacOsX()
+    if (buildAll) {
+        return isMac
+    } else {
+        return isMac && arch == 'amd64'
+    }
+}
+
+def mac32PlatformDetect = { config->
+    def arch = System.getProperty("os.arch")
+    def isMac = OperatingSystem.current().isMacOsX()
+    if (buildAll) {
+        return isMac
+    } else {
+        return isMac && arch == 'x86'
+    }
 }
 
 model {
@@ -89,7 +121,7 @@ model {
             debugCompilerArgs = linuxDebugCompilerArgs
             releaseCompilerArgs = linuxReleaseCompilerArgs
             compilerFamily = 'Gcc'
-            detectPlatform = linuxIntelPlatformDetect
+            detectPlatform = linux32IntelPlatformDetect
             exclude << 'halAthena'
         }
         linuxX64(BuildConfig) {
@@ -100,7 +132,7 @@ model {
             debugCompilerArgs = linuxDebugCompilerArgs
             releaseCompilerArgs = linuxReleaseCompilerArgs
             compilerFamily = 'Gcc'
-            detectPlatform = linuxIntelPlatformDetect
+            detectPlatform = linux64IntelPlatformDetect
             exclude << 'halAthena'
         }
         macX86(BuildConfig) {
@@ -112,7 +144,7 @@ model {
             debugCompilerArgs = macDebugCompilerArgs
             releaseCompilerArgs = macReleaseCompilerArgs
             compilerFamily = 'Clang'
-            detectPlatform = macPlatformDetect
+            detectPlatform = mac32PlatformDetect
             exclude << 'halAthena'
         }
         macX64(BuildConfig) {
@@ -122,7 +154,7 @@ model {
             debugCompilerArgs = macDebugCompilerArgs
             releaseCompilerArgs = macReleaseCompilerArgs
             compilerFamily = 'Clang'
-            detectPlatform = macPlatformDetect
+            detectPlatform = mac64PlatformDetect
             exclude << 'halAthena'
         }
         roboRio(CrossBuildConfig) {
@@ -136,6 +168,8 @@ model {
             releaseStripBinaries = true
             compilerFamily = 'Gcc'
             exclude << 'halSim'
+            exclude << 'halSimTestingBase'
+            exclude << 'wpilibcTestingBase'
         }
         raspbian(CrossBuildConfig) {
             architecture = 'raspbian'
@@ -145,6 +179,7 @@ model {
             linkerArgs = linuxLinkerArgs
             debugCompilerArgs = linuxDebugCompilerArgs
             releaseCompilerArgs = linuxReleaseCompilerArgs
+            skipByDefault = true
             compilerFamily = 'Gcc'
             exclude << 'gmock'
             exclude << 'halAthena'
@@ -157,6 +192,7 @@ model {
             linkerArgs = linuxLinkerArgs
             debugCompilerArgs = linuxDebugCompilerArgs
             releaseCompilerArgs = linuxReleaseCompilerArgs
+            skipByDefault = true
             compilerFamily = 'Gcc'
             exclude << 'gmock'
             exclude << 'halAthena'
@@ -169,6 +205,7 @@ model {
             linkerArgs = linuxLinkerArgs
             debugCompilerArgs = linuxDebugCompilerArgs
             releaseCompilerArgs = linuxReleaseCompilerArgs
+            skipByDefault = true
             compilerFamily = 'Gcc'
             exclude << 'gmock'
             exclude << 'halAthena'

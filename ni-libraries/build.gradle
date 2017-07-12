@@ -23,7 +23,7 @@ public class NiDependencySet implements NativeDependencySet {
     }
 
     public FileCollection getRuntimeFiles() {
-        return getFiles()
+        return m_project.files()
     }
 }
 

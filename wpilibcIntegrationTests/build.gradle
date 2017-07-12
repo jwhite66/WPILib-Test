@@ -39,7 +39,7 @@ model {
                 cpp {
                     source {
                         srcDirs = ['src/gtest/src', 'src/FRCUserProgram/cpp']
-                        includes = ['*-all.cc', '*.cpp']
+                        includes = ['*-all.cc', '*_main.cc', '*.cpp']
                     }
                     exportedHeaders {
                         srcDirs = ['src/gtest/include', 'src/FRCUserProgram/headers']
@@ -51,7 +51,7 @@ model {
                 binary.tasks.withType(CppCompile) {
                     cppCompiler.args "-DNAMESPACED_WPILIB"
                     cppCompiler.args "-DNAMESPACED_PRIORITY"
-                    cppCompiler.args "-Wno-missing-field-initializer"
+                    cppCompiler.args "-Wno-missing-field-initializers"
                 }
                 binary.lib project: ':gmock', library: 'gmock', linkage: 'static'
                 project(':ni-libraries').addNiLibrariesToLinker(binary)
@@ -62,3 +62,25 @@ model {
     }
 }
 
+task copyWpilibCTestLibrariesToOutput(type: Copy) {
+    destinationDir new File("$buildDir/testFiles")
+
+    project.model {
+        binaries {
+            withType(NativeExecutableBinarySpec) { spec ->
+                spec.libs.each {
+                    it.runtimeFiles.each {
+                        from (it) {
+                            into '/libs'
+                        }
+                    }
+                }
+                from (spec.executable.file) {
+                    into '/'
+                }
+            }
+        }
+    }
+}
+
+build.dependsOn(copyWpilibCTestLibrariesToOutput)

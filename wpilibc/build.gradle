@@ -17,7 +17,7 @@ model {
             ext = 'zip'
             version = '+'
             sharedConfigs = [ wpilibc: [],
-                              wpilibcTest: [] ]
+                              wpilibcTestingBase: [] ]
         }
         ntcore(DependencyConfig) {
             groupId = 'edu.wpi.first.ntcore'
@@ -26,7 +26,7 @@ model {
             ext = 'zip'
             version = '+'
             sharedConfigs = [ wpilibc: [],
-                              wpilibcTest: [] ]
+                              wpilibcTestingBase: [] ]
         }
     }
 }
@@ -61,12 +61,18 @@ model {
                 }
             }
         }
+        wpilibcTestingBase(NativeLibrarySpec) {
+        }
     }
     binaries {
         withType(GoogleTestTestSuiteBinarySpec) {
-            lib project: ':gmock', library: 'gmock', linkage: 'static'
-            lib project: ':hal', library: 'halSim', linkage: 'shared'
-            lib library: 'wpilibc', linkage: 'shared'
+            if (it.component.testedComponent.name != 'wpilibc') {
+                lib project: ':gmock', library: 'gmock', linkage: 'static'
+                lib project: ':hal', library: 'halSim', linkage: 'shared'
+                lib library: 'wpilibc', linkage: 'shared'
+            } else {
+                it.buildable = false
+            }
         }
     }
 }

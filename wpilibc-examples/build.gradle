@@ -41,7 +41,7 @@ class ExampleComponentRules extends RuleSource {
         projectLayout.projectIdentifier.examplesMap.each {
             tasks.create(it.key, NativeLibrarySpec) {
                 binaries.all { binary->
-                    project(':ni-libraries').addNiLibrariesToLinker(binary)
+                    //projectLayout.projectIdentifier.rootProject(':ni-libraries').addNiLibrariesToLinker(binary)
                     binary.lib project: ':hal', library: 'halAthena', linkage: 'shared'
                     binary.lib project: ':wpilibc', library: 'wpilibc', linkage: 'shared'
                 }
