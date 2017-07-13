@@ -27,8 +27,6 @@ dependencies {
 
 build.dependsOn shadowJar
 
-//compileJava.dependsOn tasks.getByPath(':wpilibj:testClasses')
-
 task copyWpilibJTestLibrariesToOutput(type: Copy) {
     destinationDir new File("$buildDir/testFiles")
 
