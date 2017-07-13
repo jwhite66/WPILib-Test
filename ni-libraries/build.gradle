@@ -28,7 +28,9 @@ public class NiDependencySet implements NativeDependencySet {
 }
 
 ext.addNiLibrariesToLinker = { binary->
-    binary.lib(new NiDependencySet(project))
+    if (binary.targetPlatform.architecture.name == 'athena') {
+        binary.lib(new NiDependencySet(project))
+    }
 }
 
 task libZip(type: Zip) {

@@ -107,9 +107,6 @@ model {
             sourceSets = [ project.sourceSets.main ]
         }
     }
-}
-
-model {
     exportsConfigs {
         wpilibJNIShared(ExportsConfig) {
             x86SymbolFilter = { symbols->
@@ -152,9 +149,6 @@ model {
             }
         }
     }
-}
-
-model {
     dependencyConfigs {
         wpiutil(DependencyConfig) {
             groupId = 'edu.wpi.first.wpiutil'
@@ -163,60 +157,53 @@ model {
             ext = 'zip'
             version = '+'
             sharedConfigs = [ wpilibJNIShared: [] ]
-            staticConfigs = [ wpilibJNIStatic: [], wpilibJniTest: [] ]
+            staticConfigs = [ wpilibJNIStatic: [] ]
         }
     }
-}
-
-model {
     components {
         wpilibJNIStatic(NativeLibrarySpec) {
             baseName = 'wpilibJNI'
-            sources {
-                cpp {
-                    source {
-                        srcDirs = ['src/wpilibJNI/cpp']
-                        includes = ['**/*.cpp']
-                    }
-                }
-            }
-            binaries.all { binary->
+            binaries.withType(NativeBinarySpec) { binary ->
                 if (binary.targetPlatform.architecture.name == 'athena') {
-                    tasks.withType(CppCompile) {
-                        cppCompiler.args "-DCONFIG_ATHENA"
-                    }
-                    project(':ni-libraries').addNiLibrariesToLinker(binary)
                     binary.lib project: ':hal', library: 'halAthena', linkage: 'static'
                 } else {
                     binary.lib project: ':hal', library: 'halSim', linkage: 'static'
                 }
             }
-        }
-        wpilibJNIShared(NativeLibrarySpec) {
-            baseName = 'wpilibJNI'
             sources {
                 cpp {
                     source {
-                        srcDirs = ['src/wpilibJNI/cpp']
+                        srcDirs = ['src/main/native/cpp']
                         includes = ['**/*.cpp']
                     }
                 }
             }
-            binaries.all { binary->
+        }
+        wpilibJNIShared(NativeLibrarySpec) {
+            baseName = 'wpilibJNI'
+            binaries.withType(NativeBinarySpec) { binary ->
                 if (binary.targetPlatform.architecture.name == 'athena') {
-                    tasks.withType(CppCompile) {
-                        cppCompiler.args "-DCONFIG_ATHENA"
-                    }
-                    project(':ni-libraries').addNiLibrariesToLinker(binary)
                     binary.lib project: ':hal', library: 'halAthena', linkage: 'shared'
                 } else {
                     binary.lib project: ':hal', library: 'halSim', linkage: 'shared'
+                }
+            }
+            sources {
+                cpp {
+                    source {
+                        srcDirs = ['src/main/native/cpp']
+                        includes = ['**/*.cpp']
+                    }
                 }
             }
         }
         
     }
     binaries {
+        withType(NativeBinarySpec) {
+            project(':hal').addHalCompilerArguments(it)
+            project(':ni-libraries').addNiLibrariesToLinker(it)
+        }
         withType(StaticLibraryBinarySpec) {
             it.buildable = false
         }
@@ -227,7 +214,7 @@ task cppSourcesZip(type: Zip) {
     destinationDir = project.buildDir
     classifier = "sources"
 
-    from('src/wpilibJNI/cpp') {
+    from('src/main/native/cpp') {
         into '/'
     }
 }

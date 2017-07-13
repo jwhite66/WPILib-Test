@@ -51,6 +51,7 @@ model {
                 binary.tasks.withType(CppCompile) {
                     cppCompiler.args "-DNAMESPACED_WPILIB"
                     cppCompiler.args "-DNAMESPACED_PRIORITY"
+                    cppCompiler.args "-DCONFIG_ATHENA"
                     cppCompiler.args "-Wno-missing-field-initializers"
                 }
                 binary.lib project: ':gmock', library: 'gmock', linkage: 'static'

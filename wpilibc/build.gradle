@@ -17,7 +17,8 @@ model {
             ext = 'zip'
             version = '+'
             sharedConfigs = [ wpilibc: [],
-                              wpilibcTestingBase: [] ]
+                              wpilibcTestingBase: [],
+                              wpilibcDev: [] ]
         }
         ntcore(DependencyConfig) {
             groupId = 'edu.wpi.first.ntcore'
@@ -26,12 +27,10 @@ model {
             ext = 'zip'
             version = '+'
             sharedConfigs = [ wpilibc: [],
-                              wpilibcTestingBase: [] ]
+                              wpilibcTestingBase: [],
+                              wpilibcDev: [] ]
         }
     }
-}
-
-model {
     exportsConfigs {
         wpilibc(ExportsConfig) {
             x86ExcludeSymbols = [ '_CT??_R0?AV_System_error', '_CT??_R0?AVexception', '_CT??_R0?AVfailure',
@@ -44,31 +43,64 @@ model {
                                   '_TI5?AVfailure' ]
         }
     }
-}
-
-model {
     components {
         wpilibc(NativeLibrarySpec) {
-            binaries.all { binary->
-                if (binary.targetPlatform.architecture.name == 'athena') {
-                    tasks.withType(CppCompile) {
-                        cppCompiler.args "-DCONFIG_ATHENA"
+            sources {
+                cpp {
+                    source {
+                        srcDirs = [ '/src/main/native/cpp' ]
+                        includes = ["**/*.cpp"]
                     }
-                    project(':ni-libraries').addNiLibrariesToLinker(binary)
-                    binary.lib project: ':hal', library: 'halAthena', linkage: 'shared'
-                } else {
-                    binary.lib project: ':hal', library: 'halSim', linkage: 'shared'
+                    exportedHeaders {
+                        srcDirs = ["src/main/native/include"]
+                    }
                 }
             }
         }
-        wpilibcTestingBase(NativeLibrarySpec) {
+        // The TestingBase library is a workaround for an issue with the GoogleTest plugin.
+        // The plugin by default will rebuild the entire test source set, which increases
+        // build time. By testing an empty library, and then just linking the already built component
+        // into the test, we save the extra build
+        wpilibcTestingBase(NativeLibrarySpec) { }
+        // By default, a development executable will be generated. This is to help the case of 
+        // testing specific functionality of the library.
+        if (!project.hasProperty('skipDevExe')) {
+            wpilibcDev(NativeExecutableSpec) {
+                binaries.all {
+                    lib library: 'wpilibc', linkage: 'shared'
+                }
+                sources {
+                    cpp {
+                        source {
+                            srcDirs 'src/dev/native/cpp'
+                            include '**/*.cpp'
+                        }
+                        exportedHeaders {
+                            srcDirs 'src/dev/native/include'
+                        }
+                    }
+                }
+            }
+        }
+    }
+    testSuites {
+        wpilibcTestingBaseTest {
+            sources {
+                cpp.source.srcDir '/src/test/native/cpp'
+                cpp.exportedHeaders.srcDir '/src/test/native/include'
+            }
         }
     }
     binaries {
+        all {
+            project(':hal').addHalCompilerArguments(it)
+            project(':ni-libraries').addNiLibrariesToLinker(it)
+            project(':hal').addHalToLinker(it)
+            cppCompiler.args "-DNAMESPACED_WPILIB"
+        }
         withType(GoogleTestTestSuiteBinarySpec) {
-            if (it.component.testedComponent.name != 'wpilibc') {
+            if (it.component.testedComponent.name.contains('TestingBase')) {
                 lib project: ':gmock', library: 'gmock', linkage: 'static'
-                lib project: ':hal', library: 'halSim', linkage: 'shared'
                 lib library: 'wpilibc', linkage: 'shared'
             } else {
                 it.buildable = false
@@ -80,7 +112,7 @@ task cppSourcesZip(type: Zip) {
     destinationDir = project.buildDir
     classifier = "sources"
 
-    from('src/wpilibc/cpp') {
+    from('src/main/native/cpp') {
         into '/'
     }
 }
@@ -89,7 +121,7 @@ task cppHeadersZip(type: Zip) {
     destinationDir = project.buildDir
     classifier = "headers"
 
-    from('src/wpilibc/headers') {
+    from('src/main/native/headers') {
         into '/'
     }
 }
