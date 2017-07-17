@@ -4,7 +4,6 @@ apply plugin: 'visual-studio'
 apply plugin: 'edu.wpi.first.native-utils'
 apply plugin: 'edu.wpi.first.dependency-utils'
 apply plugin: 'edu.wpi.first.exports-utils'
-apply plugin: 'edu.wpi.first.publish-utils'
 
 apply from: '../config.gradle'
 
@@ -174,30 +173,5 @@ model {
     }
 }
 
-task cppSourcesZip(type: Zip) {
-    destinationDir = project.buildDir
-    classifier = "sources"
-
-    from('src/main/native/athena') {
-        into '/athena'
-    }
-
-    from('src/main/native/sim') {
-        into '/sim'
-    }
-
-    from('src/main/native/shared') {
-        into '/shared'
-    }
-}
-
-task cppHeadersZip(type: Zip) {
-    destinationDir = project.buildDir
-    classifier = "headers"
-
-    from('src/main/native/include') {
-        into '/'
-    }
-}
-
 apply from: 'publish.gradle'
+apply from: 'zips.gradle'

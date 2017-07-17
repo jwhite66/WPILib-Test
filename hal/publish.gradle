@@ -7,7 +7,7 @@ if (!hasProperty('releaseType')) {
     }
 }
 
-def pubVersion
+ext.pubVersion = ''
 if (project.hasProperty("publishVersion")) {
     pubVersion = project.publishVersion
 } else {
@@ -18,34 +18,5 @@ if (pubVersion == null || pubVersion == "") {
   pubVersion = "424242-SNAPSHOT"
 }
 
-def baseArtifactId = 'hal'
-def artifactGroupId = 'edu.wpi.first.hal'
-
-model {
-  publishingConfigs {
-        cpp(PublishingConfig) {
-            extraPublishingTasks = [ cppHeadersZip, cppSourcesZip ]
-            isNative = true
-            artifactId = baseArtifactId
-            groupId = artifactGroupId
-            version = pubVersion
-            includeComponents = [ 'halAthena' ]
-        }
-        cppSim(PublishingConfig) {
-            isNative = true
-            artifactId = baseArtifactId
-            groupId = artifactGroupId
-            version = pubVersion
-            includeComponents = [ 'halSim' ]
-        }
-        if (project.hasProperty('buildHalStaticDeps')) {
-            cppStaticDeps(PublishingConfig) {
-                isNative = true
-                artifactId = baseArtifactId + 'StaticDeps'
-                groupId = artifactGroupId
-                version = pubVersion
-                includeComponents = [ 'halSimStaticDeps' ]
-            }
-        }
-    }
-}
+ext.baseArtifactId = 'hal'
+ext.artifactGroupId = 'edu.wpi.first.hal'

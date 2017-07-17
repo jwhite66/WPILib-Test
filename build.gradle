@@ -1,3 +1,5 @@
+import edu.wpi.first.nativeutils.NativeUtils
+
 buildscript {
     repositories {
         mavenLocal()
@@ -9,6 +11,82 @@ buildscript {
 
 plugins {
     id 'edu.wpi.first.wpilib.versioning.WPILibVersioningPlugin' version '1.6'
+}
+
+ext.licenseFile = new File("$rootDir/license.txt")
+
+ext.getClassifier = { binary->
+    return NativeUtils.getClassifier(binary)
+}
+
+ext.getPlatformPath = { binary->
+    return NativeUtils.getPlatformPath(binary)
+}
+
+ext.createComponentZipTasks = { components, name, base, type, project, func ->
+    def configMap = [:]
+    components.each {
+        if (it in NativeLibrarySpec && it.name == name) { 
+            it.binaries.each {
+                def target = getClassifier(it)
+                if (configMap.containsKey(target)) {
+                    configMap.get(target).add(it)
+                } else {
+                    configMap.put(target, [])
+                    configMap.get(target).add(it)
+                }
+            }
+        }
+    }
+    def taskList = []
+    configMap.each { key, value ->
+        def baseName = base + name
+        def task = project.tasks.create(baseName + "-${key}", type) {
+            description = 'Creates component archive for platform ' + key
+            destinationDir =  project.buildDir
+            classifier = key
+            baseName = baseName
+            duplicatesStrategy = 'exclude'
+
+            from(licenseFile) {
+                into '/'
+            }
+
+            func(it, value)
+        }
+        taskList.add(task)
+
+        project.build.dependsOn task
+
+        project.artifacts {
+            task
+        }
+    }
+    return taskList
+}
+
+ext.includeStandardZipFormat = { task, value ->
+    value.each { binary->
+        if (binary.buildable) {
+            if (binary instanceof SharedLibraryBinarySpec) {
+                task.dependsOn binary.buildTask
+                task.from(new File(binary.sharedLibraryFile.absolutePath + ".debug")) {
+                    into getPlatformPath(binary) + '/shared'
+                }
+                task.from (binary.sharedLibraryFile) {
+                    into getPlatformPath(binary) + '/shared'
+                }
+                task.from (binary.sharedLibraryLinkFile) {
+                    into getPlatformPath(binary) + '/shared'
+                }
+            } else if (binary instanceof StaticLibraryBinarySpec) {
+                task.dependsOn binary.buildTask
+                task.from (binary.staticLibraryFile) {
+                    into getPlatformPath(binary) + '/static'
+                }
+            }
+        }
+    }
 }
 
 // Ensure that the WPILibVersioningPlugin is setup by setting the release type, if releaseType wasn't

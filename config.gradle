@@ -168,6 +168,7 @@ model {
             releaseStripBinaries = true
             compilerFamily = 'Gcc'
             exclude << 'halSim'
+            exclude << 'halSimStaticDeps'
             exclude << 'halSimTestingBase'
             exclude << 'wpilibcTestingBase'
         }
