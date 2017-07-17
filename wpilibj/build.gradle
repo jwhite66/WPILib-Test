@@ -25,7 +25,6 @@ apply plugin: 'visual-studio'
 apply plugin: 'edu.wpi.first.native-utils'
 apply plugin: 'edu.wpi.first.jni-utils'
 apply plugin: 'edu.wpi.first.dependency-utils'
-apply plugin: 'edu.wpi.first.publish-utils'
 apply plugin: 'edu.wpi.first.exports-utils'
 apply plugin: 'java'
 
@@ -208,37 +207,6 @@ model {
             it.buildable = false
         }
     }
-}
-
-task cppSourcesZip(type: Zip) {
-    destinationDir = project.buildDir
-    classifier = "sources"
-
-    from('src/main/native/cpp') {
-        into '/'
-    }
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadoc(type: Javadoc, overwrite: true) {
-    javadoc.options.links("http://docs.oracle.com/javase/8/docs/api/")
-    options.addStringOption "tag", "pre:a:Pre-Condition"
-//    options.addStringOption('Xdoclint:accessibility,syntax,reference,html', '-quiet')
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
-    archives cppSourcesZip
 }
 
 apply from: 'publish.gradle'

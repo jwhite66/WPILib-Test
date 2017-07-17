@@ -7,7 +7,7 @@ if (!hasProperty('releaseType')) {
     }
 }
 
-def pubVersion
+def pubVersion = ''
 if (project.hasProperty("publishVersion")) {
     pubVersion = project.publishVersion
 } else {
@@ -21,15 +21,48 @@ if (pubVersion == null || pubVersion == "") {
 def baseArtifactId = 'wpilibc'
 def artifactGroupId = 'edu.wpi.first.wpilibc'
 
+task cppSourcesZip(type: Zip) {
+    destinationDir = project.buildDir
+    classifier = "sources"
+
+    from(licenseFile) {
+        into '/'
+    }
+
+    from('src/main/native/cpp') {
+        into '/'
+    }
+}
+
+task cppHeadersZip(type: Zip) {
+    destinationDir = project.buildDir
+    classifier = "headers"
+
+    from(licenseFile) {
+        into '/'
+    }
+
+    from('src/main/native/include') {
+        into '/'
+    }
+}
+
 model {
-  publishingConfigs {
-        cpp(PublishingConfig) {
-            extraPublishingTasks = [ cppHeadersZip, cppSourcesZip ]
-            isNative = true
-            artifactId = baseArtifactId
-            groupId = artifactGroupId
-            version = pubVersion
-            includeComponents = [ 'wpilibc' ]
+    publishing {
+        def wpilibCTaskList = createComponentZipTasks($.components, 'wpilibc', 'zipcpp', Zip, project, includeStandardZipFormat)
+
+        publications {
+            cpp(MavenPublication) {
+                wpilibCTaskList.each {
+                    artifact it
+                }
+                artifact cppHeadersZip
+                artifact cppSourcesZip
+
+                artifactId = baseArtifactId
+                groupId artifactGroupId
+                version pubVersion
+            }
         }
     }
 }

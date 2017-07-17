@@ -5,9 +5,9 @@ apply plugin: 'visual-studio'
 apply plugin: 'edu.wpi.first.native-utils'
 apply plugin: 'edu.wpi.first.exports-utils'
 apply plugin: 'edu.wpi.first.dependency-utils'
-apply plugin: 'edu.wpi.first.publish-utils'
 
-apply from: '../configAthena.gradle'
+ext.onlyAthena = true
+apply from: '../config.gradle'
 
 ext.examplesMap = [:]
 
@@ -53,6 +53,7 @@ model {
                     cppCompiler.args "-DNAMESPACED_PRIORITY"
                     cppCompiler.args "-DCONFIG_ATHENA"
                     cppCompiler.args "-Wno-missing-field-initializers"
+                    cppCompiler.args "-Wno-unused-variable"
                 }
                 binary.lib project: ':gmock', library: 'gmock', linkage: 'static'
                 project(':ni-libraries').addNiLibrariesToLinker(binary)

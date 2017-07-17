@@ -4,7 +4,8 @@ import org.gradle.internal.os.OperatingSystem
 def windowsCompilerArgs = ['/EHsc', '/DNOMINMAX', '/D_SCL_SECURE_NO_WARNINGS', '/D_WINSOCK_DEPRECATED_NO_WARNINGS',
                            '/Zi', '/FS', '/Zc:inline', '/MT']
 def windowsReleaseCompilerArgs = ['/O2']
-def windowsLinkerArgs = ['/DEBUG:FULL']
+def windowsLinkerArgs = [ '/DEBUG:FULL' ]
+def windowsReleaseLinkerArgs = [ '/OPT:REF', '/OPT:ICF' ]
 
 def linuxCompilerArgs = ['-std=c++11', '-Wformat=2', '-Wall', '-Wextra', '-Werror', '-pedantic', '-Wno-psabi', '-g',
                          '-Wno-unused-parameter', '-fPIC', '-rdynamic', '-Wno-error=deprecated-declarations', '-pthread']
@@ -89,138 +90,149 @@ def mac32PlatformDetect = { config->
     }
 }
 
-model {
-    buildConfigs {
-        winX86(BuildConfig) {
-            architecture = 'x86'
-            operatingSystem = 'windows'
-            compilerArgs = windowsCompilerArgs
-            linkerArgs = windowsLinkerArgs
-            releaseCompilerArgs = windowsReleaseCompilerArgs
-            compilerFamily = 'VisualCpp'
-            detectPlatform = windows32PlatformDetect
-            exclude << 'halAthena'
+if (!project.hasProperty('skipAthena')) {
+    model {
+        buildConfigs {
+                roboRio(CrossBuildConfig) {
+                architecture = 'athena'
+                operatingSystem = 'linux'
+                toolChainPrefix = 'arm-frc-linux-gnueabi-'
+                compilerArgs = linuxCompilerArgs
+                linkerArgs = linuxLinkerArgs
+                debugCompilerArgs = linuxDebugCompilerArgs
+                releaseCompilerArgs = linuxReleaseCompilerArgs
+                releaseStripBinaries = true
+                compilerFamily = 'Gcc'
+                exclude << 'halSim'
+                exclude << 'halSimStaticDeps'
+                exclude << 'halSimTestingBase'
+                exclude << 'wpilibcTestingBase'
+            }
         }
-        winX64(BuildConfig) {
-            architecture = 'x86-64'
-            operatingSystem = 'windows'
-            compilerArgs = windowsCompilerArgs
-            linkerArgs = windowsLinkerArgs
-            releaseCompilerArgs = windowsReleaseCompilerArgs
-            compilerFamily = 'VisualCpp'
-            detectPlatform = windows64PlatformDetect
-            exclude << 'halAthena'
-        }
-        linuxX86(BuildConfig) {
-            architecture = 'x86'
-            operatingSystem = 'linux'
-            compilerArgs = linuxCompilerArgs
-            compilerArgs << linux32BitArg
-            linkerArgs = linuxLinkerArgs
-            linkerArgs << linux32BitArg
-            debugCompilerArgs = linuxDebugCompilerArgs
-            releaseCompilerArgs = linuxReleaseCompilerArgs
-            compilerFamily = 'Gcc'
-            detectPlatform = linux32IntelPlatformDetect
-            exclude << 'halAthena'
-        }
-        linuxX64(BuildConfig) {
-            architecture = 'x86-64'
-            operatingSystem = 'linux'
-            compilerArgs = linuxCompilerArgs
-            linkerArgs = linuxLinkerArgs
-            debugCompilerArgs = linuxDebugCompilerArgs
-            releaseCompilerArgs = linuxReleaseCompilerArgs
-            compilerFamily = 'Gcc'
-            detectPlatform = linux64IntelPlatformDetect
-            exclude << 'halAthena'
-        }
-        macX86(BuildConfig) {
-            architecture = 'x86'
-            operatingSystem = 'osx'
-            compilerArgs = macCompilerArgs
-            compilerArgs << mac32BitArg
-            linkerArgs << mac32BitArg
-            debugCompilerArgs = macDebugCompilerArgs
-            releaseCompilerArgs = macReleaseCompilerArgs
-            compilerFamily = 'Clang'
-            detectPlatform = mac32PlatformDetect
-            exclude << 'halAthena'
-        }
-        macX64(BuildConfig) {
-            architecture = 'x86-64'
-            operatingSystem = 'osx'
-            compilerArgs = macCompilerArgs
-            debugCompilerArgs = macDebugCompilerArgs
-            releaseCompilerArgs = macReleaseCompilerArgs
-            compilerFamily = 'Clang'
-            detectPlatform = mac64PlatformDetect
-            exclude << 'halAthena'
-        }
-        roboRio(CrossBuildConfig) {
-            architecture = 'athena'
-            operatingSystem = 'linux'
-            toolChainPrefix = 'arm-frc-linux-gnueabi-'
-            compilerArgs = linuxCompilerArgs
-            linkerArgs = linuxLinkerArgs
-            debugCompilerArgs = linuxDebugCompilerArgs
-            releaseCompilerArgs = linuxReleaseCompilerArgs
-            releaseStripBinaries = true
-            compilerFamily = 'Gcc'
-            exclude << 'halSim'
-            exclude << 'halSimStaticDeps'
-            exclude << 'halSimTestingBase'
-            exclude << 'wpilibcTestingBase'
-        }
-        raspbian(CrossBuildConfig) {
-            architecture = 'raspbian'
-            operatingSystem = 'linux'
-            toolChainPrefix = 'arm-linux-gnueabihf-'
-            compilerArgs = linuxCompilerArgs
-            linkerArgs = linuxLinkerArgs
-            debugCompilerArgs = linuxDebugCompilerArgs
-            releaseCompilerArgs = linuxReleaseCompilerArgs
-            skipByDefault = true
-            compilerFamily = 'Gcc'
-            exclude << 'gmock'
-            exclude << 'halAthena'
-        }
-        armhf(CrossBuildConfig) {
-            architecture = 'armhf'
-            operatingSystem = 'linux'
-            toolChainPrefix = 'arm-linux-gnueabihf-'
-            compilerArgs = linuxCompilerArgs
-            linkerArgs = linuxLinkerArgs
-            debugCompilerArgs = linuxDebugCompilerArgs
-            releaseCompilerArgs = linuxReleaseCompilerArgs
-            skipByDefault = true
-            compilerFamily = 'Gcc'
-            exclude << 'gmock'
-            exclude << 'halAthena'
-        }
-        aarch(CrossBuildConfig) {
-            architecture = 'aarch'
-            operatingSystem = 'linux'
-            toolChainPrefix = 'aarch-linux-gnu-'
-            compilerArgs = linuxCompilerArgs
-            linkerArgs = linuxLinkerArgs
-            debugCompilerArgs = linuxDebugCompilerArgs
-            releaseCompilerArgs = linuxReleaseCompilerArgs
-            skipByDefault = true
-            compilerFamily = 'Gcc'
-            exclude << 'gmock'
-            exclude << 'halAthena'
-        }
-        linuxArm(BuildConfig) {
-            architecture = 'arm'
-            operatingSystem = 'linux'
-            compilerArgs = linuxCompilerArgs
-            linkerArgs = linuxLinkerArgs
-            debugCompilerArgs = linuxDebugCompilerArgs
-            releaseCompilerArgs = linuxReleaseCompilerArgs
-            compilerFamily = 'Gcc'
-            detectPlatform = linuxArmPlatformDetect
-            exclude << 'halAthena'
+    }
+}
+
+if (!project.hasProperty('onlyAthena')) {
+    model {
+        buildConfigs {
+            winX86(BuildConfig) {
+                architecture = 'x86'
+                operatingSystem = 'windows'
+                compilerArgs = windowsCompilerArgs
+                linkerArgs = windowsLinkerArgs
+                releaseCompilerArgs = windowsReleaseCompilerArgs
+                releaseLinkerArgs = windowsReleaseLinkerArgs
+                compilerFamily = 'VisualCpp'
+                detectPlatform = windows32PlatformDetect
+                exclude << 'halAthena'
+            }
+            winX64(BuildConfig) {
+                architecture = 'x86-64'
+                operatingSystem = 'windows'
+                compilerArgs = windowsCompilerArgs
+                linkerArgs = windowsLinkerArgs
+                releaseCompilerArgs = windowsReleaseCompilerArgs
+                releaseLinkerArgs = windowsReleaseLinkerArgs
+                compilerFamily = 'VisualCpp'
+                detectPlatform = windows64PlatformDetect
+                exclude << 'halAthena'
+            }
+            linuxX86(BuildConfig) {
+                architecture = 'x86'
+                operatingSystem = 'linux'
+                compilerArgs = linuxCompilerArgs
+                compilerArgs << linux32BitArg
+                linkerArgs = linuxLinkerArgs
+                linkerArgs << linux32BitArg
+                debugCompilerArgs = linuxDebugCompilerArgs
+                releaseCompilerArgs = linuxReleaseCompilerArgs
+                compilerFamily = 'Gcc'
+                detectPlatform = linux32IntelPlatformDetect
+                exclude << 'halAthena'
+            }
+            linuxX64(BuildConfig) {
+                architecture = 'x86-64'
+                operatingSystem = 'linux'
+                compilerArgs = linuxCompilerArgs
+                linkerArgs = linuxLinkerArgs
+                debugCompilerArgs = linuxDebugCompilerArgs
+                releaseCompilerArgs = linuxReleaseCompilerArgs
+                compilerFamily = 'Gcc'
+                detectPlatform = linux64IntelPlatformDetect
+                exclude << 'halAthena'
+            }
+            macX86(BuildConfig) {
+                architecture = 'x86'
+                operatingSystem = 'osx'
+                compilerArgs = macCompilerArgs
+                compilerArgs << mac32BitArg
+                linkerArgs << mac32BitArg
+                debugCompilerArgs = macDebugCompilerArgs
+                releaseCompilerArgs = macReleaseCompilerArgs
+                compilerFamily = 'Clang'
+                detectPlatform = mac32PlatformDetect
+                exclude << 'halAthena'
+            }
+            macX64(BuildConfig) {
+                architecture = 'x86-64'
+                operatingSystem = 'osx'
+                compilerArgs = macCompilerArgs
+                debugCompilerArgs = macDebugCompilerArgs
+                releaseCompilerArgs = macReleaseCompilerArgs
+                compilerFamily = 'Clang'
+                detectPlatform = mac64PlatformDetect
+                exclude << 'halAthena'
+            }
+            raspbian(CrossBuildConfig) {
+                architecture = 'raspbian'
+                operatingSystem = 'linux'
+                toolChainPrefix = 'arm-linux-gnueabihf-'
+                compilerArgs = linuxCompilerArgs
+                linkerArgs = linuxLinkerArgs
+                debugCompilerArgs = linuxDebugCompilerArgs
+                releaseCompilerArgs = linuxReleaseCompilerArgs
+                skipByDefault = true
+                compilerFamily = 'Gcc'
+                exclude << 'gmock'
+                exclude << 'halAthena'
+            }
+            armhf(CrossBuildConfig) {
+                architecture = 'armhf'
+                operatingSystem = 'linux'
+                toolChainPrefix = 'arm-linux-gnueabihf-'
+                compilerArgs = linuxCompilerArgs
+                linkerArgs = linuxLinkerArgs
+                debugCompilerArgs = linuxDebugCompilerArgs
+                releaseCompilerArgs = linuxReleaseCompilerArgs
+                skipByDefault = true
+                compilerFamily = 'Gcc'
+                exclude << 'gmock'
+                exclude << 'halAthena'
+            }
+            aarch(CrossBuildConfig) {
+                architecture = 'aarch'
+                operatingSystem = 'linux'
+                toolChainPrefix = 'aarch-linux-gnu-'
+                compilerArgs = linuxCompilerArgs
+                linkerArgs = linuxLinkerArgs
+                debugCompilerArgs = linuxDebugCompilerArgs
+                releaseCompilerArgs = linuxReleaseCompilerArgs
+                skipByDefault = true
+                compilerFamily = 'Gcc'
+                exclude << 'gmock'
+                exclude << 'halAthena'
+            }
+            linuxArm(BuildConfig) {
+                architecture = 'arm'
+                operatingSystem = 'linux'
+                compilerArgs = linuxCompilerArgs
+                linkerArgs = linuxLinkerArgs
+                debugCompilerArgs = linuxDebugCompilerArgs
+                releaseCompilerArgs = linuxReleaseCompilerArgs
+                compilerFamily = 'Gcc'
+                detectPlatform = linuxArmPlatformDetect
+                exclude << 'halAthena'
+            }
         }
     }
 }

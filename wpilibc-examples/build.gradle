@@ -5,7 +5,8 @@ apply plugin: 'visual-studio'
 apply plugin: 'edu.wpi.first.native-utils'
 apply plugin: 'edu.wpi.first.dependency-utils'
 
-apply from: '../configAthena.gradle'
+ext.onlyAthena = true
+apply from: '../config.gradle'
 
 ext.examplesMap = [:]
 
