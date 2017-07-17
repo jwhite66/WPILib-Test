@@ -51,6 +51,27 @@ model {
     publishing {
         def wpilibCTaskList = createComponentZipTasks($.components, 'wpilibc', 'zipcpp', Zip, project, includeStandardZipFormat)
 
+        $.components.each {
+            if (it in NativeLibrarySpec && it.name == 'wpilibc') {
+                def libs = []
+                it.binaries.each {
+                    if (getClassifier(it) == 'linuxathena' && it in SharedLibraryBinarySpec) {
+                        it.libs.each {
+                            it.linkFiles.each {
+                                libs.add it.name
+                            }
+                            
+                        }
+                        libs.add it.sharedLibraryFile.name
+                    }
+                }
+                // TODO: Generate wpi linker file
+                libs.each {
+                    println it
+                }
+            }
+        }
+
         publications {
             cpp(MavenPublication) {
                 wpilibCTaskList.each {
