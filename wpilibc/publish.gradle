@@ -53,21 +53,55 @@ model {
 
         $.components.each {
             if (it in NativeLibrarySpec && it.name == 'wpilibc') {
-                def libs = []
-                it.binaries.each {
-                    if (getClassifier(it) == 'linuxathena' && it in SharedLibraryBinarySpec) {
-                        it.libs.each {
-                            it.linkFiles.each {
-                                libs.add it.name
-                            }
-                            
+                def libSpec = it
+                tasks.create('generateWpilibLinkScript', Task) {
+                    build.dependsOn it
+                    libSpec.binaries.each {
+                        if (getClassifier(it) == 'linuxathena' && it in SharedLibraryBinarySpec) {
+                            dependsOn it.buildTask
                         }
-                        libs.add it.sharedLibraryFile.name
+                    }
+
+                    def linkFile = project.file("${buildDir}/libwpi.so")
+                    outputs.file linkFile
+                
+                doLast {
+                    def libs = []
+                    libSpec.binaries.each {
+                        if (getClassifier(it) == 'linuxathena' && it in SharedLibraryBinarySpec) {
+                            it.libs.each {
+                                it.linkFiles.each {
+                                    libs.add it.name
+                                }
+                                
+                            }
+                            libs.add it.sharedLibraryFile.name
+                        }
+                    }
+                    // TODO: Generate wpi linker file
+
+                    /* GNU ld script */
+    //OUTPUT_FORMAT(elf32-littlearm)
+    //GROUP ( AS_NEEDED ( -lwpilibc -lHALAthena -lntcore -lwpiutil -lcscore -lopencv -lnilibraries ) )
+
+                    
+
+                    linkFile.withWriter { out ->
+                        out.println '/* GNU ld script */'
+                        out.println 'OUTPUT_FORMAT(elf32-littlearm)'
+                        out.print 'GROUP ( AS_NEEDED ( '
+                        libs.each {
+                            out.print '-l'
+                            out.print it
+                            out.print ' '
+                        }
+                        out.println ') )'
+                    }
+
+                    libs.each {
+                        println it
                     }
                 }
-                // TODO: Generate wpi linker file
-                libs.each {
-                    println it
                 }
             }
         }

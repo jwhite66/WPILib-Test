@@ -64,25 +64,39 @@ model {
     }
 }
 
-task copyWpilibCTestLibrariesToOutput(type: Copy) {
-    destinationDir new File("$buildDir/testFiles")
 
-    project.model {
-        binaries {
-            withType(NativeExecutableBinarySpec) { spec ->
-                spec.libs.each {
-                    it.runtimeFiles.each {
-                        from (it) {
-                            into '/libs'
+model {
+    tasks {
+        def bin = $.binaries
+        copyWpilibCTestLibrariesToOutput(Task) {
+            bin.each {
+                if (it in NativeExecutableBinarySpec) {
+                    def spec = it
+                    dependsOn spec.buildTask
+                }
+            }
+            doLast {
+                def destDir = "$buildDir/testFiles";
+
+                bin.each {
+                    if (it in NativeExecutableBinarySpec) {
+                        def spec = it
+                        spec.libs.each {
+                            it.runtimeFiles.each { f ->
+                                copy {
+                                    from file(f)
+                                    into destDir + '/libs'
+                                }
+                            }
+                        }
+                        copy {
+                            from spec.executable.file
+                            into destDir + '/'
                         }
                     }
                 }
-                from (spec.executable.file) {
-                    into '/'
-                }
             }
         }
+        build.dependsOn copyWpilibCTestLibrariesToOutput
     }
 }
-
-build.dependsOn(copyWpilibCTestLibrariesToOutput)
