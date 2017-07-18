@@ -57,9 +57,26 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'com.google.guava:guava:19.0'
     testRuntime files(project.nativeTestFilesJar.archivePath)
+    /*
     NativeUtils.getBuildConfigs().each {
         def base = 'edu.wpi.first.ntcore:ntcore-jni:+:'
         testRuntime base + NativeUtils.getClassifier(it)
+    }
+    */
+}
+
+model {
+    components {
+        def c = $.buildConfigs
+        c.each { config ->
+            if (NativeUtils.isConfigEnabled(config, project)) {
+                println config
+                project.dependencies {
+                    def base = 'edu.wpi.first.ntcore:ntcore-jni:+:'
+                    testRuntime base + NativeUtils.getClassifier(config)
+                }
+            }
+        }
     }
 }
 
@@ -210,3 +227,4 @@ model {
 }
 
 apply from: 'publish.gradle'
+apply from: 'integrationTestingFiles.gradle'

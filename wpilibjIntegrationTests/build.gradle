@@ -27,35 +27,4 @@ dependencies {
 
 build.dependsOn shadowJar
 
-task copyWpilibJTestLibrariesToOutput(type: Copy) {
-    destinationDir new File("$buildDir/nativelibraries")
-
-    project(':wpilibcIntegrationTests').model {
-        binaries {
-            withType(NativeExecutableBinarySpec) { spec ->
-                spec.libs.each {
-                    it.runtimeFiles.each {
-                        from (it) {
-                            into '/'
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    project(':wpilibj').model {
-        binaries {
-            withType(SharedLibraryBinarySpec) { spec ->
-                if (spec.component.name == 'wpilibJNIShared' &&
-                    spec.targetPlatform.architecture.name == 'athena') {
-                    from(spec.sharedLibraryFile) {
-                        into '/'
-                    }
-                }
-            }
-        }
-    }
-}
-
-build.dependsOn(copyWpilibJTestLibrariesToOutput)
+build.dependsOn wpilibj.build

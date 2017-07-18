@@ -75,9 +75,11 @@ model {
                     dependsOn spec.buildTask
                 }
             }
-            doLast {
-                def destDir = "$buildDir/testFiles";
+            def destDir = "$buildDir/testFiles";
+            outputs.file destDir
+            outputs.upToDateWhen { false }
 
+            doLast {
                 bin.each {
                     if (it in NativeExecutableBinarySpec) {
                         def spec = it

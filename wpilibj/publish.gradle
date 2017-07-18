@@ -58,7 +58,7 @@ artifacts {
 
 model {
     publishing {
-        def wpilibJNIStaticTaskList = createComponentZipTasks($.components, 'wpilibJNIStatic', 'jni', Zip, project, { task, value ->
+        def wpilibJNIStaticTaskList = createComponentZipTasks($.components, 'wpilibJNIStatic', 'jni', Jar, project, { task, value ->
             value.each { binary->
                 if (binary.buildable) {
                     if (binary instanceof SharedLibraryBinarySpec) {
@@ -71,7 +71,7 @@ model {
             }
         })
 
-        def wpilibJNISharedTaskList = createComponentZipTasks($.components, 'wpilibJNIShared', 'jni', Zip, project, { task, value ->
+        def wpilibJNISharedTaskList = createComponentZipTasks($.components, 'wpilibJNIShared', 'jni', Jar, project, { task, value ->
             value.each { binary->
                 if (binary.buildable) {
                     if (binary instanceof SharedLibraryBinarySpec) {

@@ -40,12 +40,12 @@ ext.createComponentZipTasks = { components, name, base, type, project, func ->
     }
     def taskList = []
     configMap.each { key, value ->
-        def baseName = base + name
-        def task = project.tasks.create(baseName + "-${key}", type) {
+        def baseN = base + name
+        def task = project.tasks.create(baseN + "-${key}", type) {
             description = 'Creates component archive for platform ' + key
             destinationDir =  project.buildDir
             classifier = key
-            baseName = baseName
+            baseName = baseN
             duplicatesStrategy = 'exclude'
 
             from(licenseFile) {
@@ -95,6 +95,10 @@ if (!hasProperty('releaseType')) {
     WPILibVersion {
         releaseType = 'dev'
     }
+}
+
+task clean(type: Delete) {
+    delete buildDir
 }
 
 task wrapper(type: Wrapper) {
