@@ -70,7 +70,6 @@ model {
         def c = $.buildConfigs
         c.each { config ->
             if (NativeUtils.isConfigEnabled(config, project)) {
-                println config
                 project.dependencies {
                     def base = 'edu.wpi.first.ntcore:ntcore-jni:+:'
                     testRuntime base + NativeUtils.getClassifier(config)
