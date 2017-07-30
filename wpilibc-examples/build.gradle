@@ -2,8 +2,7 @@ import org.gradle.language.base.internal.ProjectLayout
 
 apply plugin: 'cpp'
 apply plugin: 'visual-studio'
-apply plugin: 'edu.wpi.first.native-utils'
-apply plugin: 'edu.wpi.first.dependency-utils'
+apply plugin: 'edu.wpi.first.NativeUtils'
 
 ext.onlyAthena = true
 apply from: '../config.gradle'
