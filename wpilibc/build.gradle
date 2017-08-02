@@ -46,7 +46,7 @@ model {
             sources {
                 cpp {
                     source {
-                        srcDirs = [ '/src/main/native/cpp' ]
+                        srcDirs = [ 'src/main/native/cpp' ]
                         includes = ["**/*.cpp"]
                     }
                     exportedHeaders {
@@ -84,8 +84,8 @@ model {
     testSuites {
         wpilibcTestingBaseTest {
             sources {
-                cpp.source.srcDir '/src/test/native/cpp'
-                cpp.exportedHeaders.srcDir '/src/test/native/include'
+                cpp.source.srcDir 'src/test/native/cpp'
+                cpp.exportedHeaders.srcDir 'src/test/native/include'
             }
         }
     }

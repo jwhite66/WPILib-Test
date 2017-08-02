@@ -77,7 +77,7 @@ model {
             sources {
                 cpp {
                     source {
-                        srcDirs = [ '/src/main/native/shared', '/src/main/native/athena' ]
+                        srcDirs = [ 'src/main/native/shared', 'src/main/native/athena' ]
                         includes = ["**/*.cpp"]
                     }
                     exportedHeaders {
@@ -91,7 +91,7 @@ model {
             sources {
                 cpp {
                     source {
-                        srcDirs = [ '/src/main/native/shared', '/src/main/native/sim' ]
+                        srcDirs = [ 'src/main/native/shared', 'src/main/native/sim' ]
                         includes = ["**/*.cpp"]
                     }
                     exportedHeaders {
@@ -111,7 +111,7 @@ model {
                 sources {
                     cpp {
                         source {
-                            srcDirs = [ '/src/main/native/shared', '/src/main/native/sim' ]
+                            srcDirs = [ 'src/main/native/shared', 'src/main/native/sim' ]
                             includes = ["**/*.cpp"]
                         }
                         exportedHeaders {
@@ -150,8 +150,8 @@ model {
     testSuites {
         halSimTestingBaseTest {
             sources {
-                cpp.source.srcDir '/src/test/native/cpp'
-                cpp.exportedHeaders.srcDir '/src/test/native/include'
+                cpp.source.srcDir 'src/test/native/cpp'
+                cpp.exportedHeaders.srcDir 'src/test/native/include'
             }
         }
     }
