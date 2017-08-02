@@ -11,7 +11,7 @@
 
 #define HAL_kInvalidHandle 0
 
-typedef int32_t HAL_Handle;
+typedef intptr_t HAL_Handle;
 
 typedef HAL_Handle HAL_PortHandle;
 
@@ -43,4 +43,4 @@ typedef HAL_Handle HAL_RelayHandle;
 
 typedef HAL_Handle HAL_SolenoidHandle;
 
-typedef int32_t HAL_Bool;
+typedef intptr_t HAL_Bool;
